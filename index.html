@@ -2,111 +2,92 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Android WebView Security Test</title>
-  <style>
-    body {
-      background: #10131a;
-      color: #e8edf5;
-      font-family: Arial, sans-serif;
-      padding: 24px;
-      line-height: 1.6;
-    }
-
-    h2 { color: #70a5ff; }
-
-    .panel {
-      background: #1b2230;
-      padding: 18px;
-      border-radius: 12px;
-      margin-top: 16px;
-      overflow-wrap: anywhere;
-    }
-
-    pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .note {
-      color: #aab6c8;
-      font-size: 13px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookie Environment Comparison</title>
+<style>
+body {
+  background:#111827;
+  color:white;
+  font-family:Arial;
+  padding:20px;
+}
+.card {
+  background:#1f2937;
+  padding:16px;
+  border-radius:10px;
+  margin:12px 0;
+}
+pre {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+</style>
 </head>
 <body>
 
-  <h2>Android WebView Security Test</h2>
-  <p>Tarayıcı ve web güvenlik özellikleri inceleniyor.</p>
+<h2>Browser Cookie Comparison</h2>
 
-  <div class="panel">
-    <strong>Test sonuçları</strong>
-    <pre id="results">Test başlatılıyor...</pre>
-  </div>
+<div class="card">
+  <h3>Environment</h3>
+  <pre id="environment"></pre>
+</div>
 
-  <div class="panel">
-    <strong>Cookie erişim kontrolü</strong>
-    <pre id="cookies">Kontrol ediliyor...</pre>
-  </div>
+<div class="card">
+  <h3>Cookie Names</h3>
+  <pre id="cookies"></pre>
+</div>
 
-  <p class="note">
-    Bu test yalnızca mevcut sayfanın kendi origin
-    kapsamındaki bilgileri inceler. HttpOnly çerezleri
-    veya başka domainlerin oturum bilgilerini okumaz.
-    Sonuçlar herhangi bir sunucuya gönderilmez.
-  </p>
+<div class="card">
+  <h3>Storage</h3>
+  <pre id="storage"></pre>
+</div>
 
-  <script>
-    (() => {
-      const results = {
-        origin: location.origin,
-        protocol: location.protocol,
-        userAgent: navigator.userAgent,
-        secureContext: window.isSecureContext,
-        javaScriptEnabled: true,
-        cookieApiAvailable: (
-          typeof document.cookie === "string"
-        ),
-        localStorageAvailable: false,
-        sessionStorageAvailable: false
-      };
+<script>
+const data = {
+  origin: location.origin,
+  userAgent: navigator.userAgent,
+  protocol: location.protocol,
+  secureContext: isSecureContext,
+  cookieApi: typeof document.cookie === "string",
+  cookieNames: document.cookie
+    .split(";")
+    .map(x => x.trim())
+    .filter(Boolean)
+    .map(x => x.split("=")[0]),
+  localStorage: false,
+  sessionStorage: false
+};
 
-      try {
-        localStorage.setItem(
-          "security_test",
-          "ok"
-        );
-        results.localStorageAvailable = true;
-        localStorage.removeItem("security_test");
-      } catch (e) {}
+try {
+  localStorage.setItem("comparison_test", "ok");
+  data.localStorage = true;
+  localStorage.removeItem("comparison_test");
+} catch(e) {}
 
-      try {
-        sessionStorage.setItem(
-          "security_test",
-          "ok"
-        );
-        results.sessionStorageAvailable = true;
-        sessionStorage.removeItem("security_test");
-      } catch (e) {}
+try {
+  sessionStorage.setItem("comparison_test", "ok");
+  data.sessionStorage = true;
+  sessionStorage.removeItem("comparison_test");
+} catch(e) {}
 
-      document.getElementById("results").textContent =
-        JSON.stringify(results, null, 2);
+document.getElementById("environment").textContent =
+  JSON.stringify({
+    origin: data.origin,
+    userAgent: data.userAgent,
+    protocol: data.protocol,
+    secureContext: data.secureContext
+  }, null, 2);
 
-      const visibleCookies = document.cookie
-        .split(";")
-        .map(item => item.trim())
-        .filter(Boolean)
-        .map(item => item.split("=")[0]);
+document.getElementById("cookies").textContent =
+  JSON.stringify(data.cookieNames, null, 2);
 
-      document.getElementById("cookies").textContent =
-        visibleCookies.length
-          ? "Okunabilen çerez adları:\n" +
-            visibleCookies.join("\n")
-          : "Bu origin için JavaScript tarafından okunabilen çerez bulunamadı.";
-
-    })();
-  </script>
+document.getElementById("storage").textContent =
+  JSON.stringify({
+    localStorage: data.localStorage,
+    sessionStorage: data.sessionStorage
+  }, null, 2);
+</script>
 
 </body>
 </html>
