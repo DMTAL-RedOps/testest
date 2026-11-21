@@ -4,90 +4,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cookie Environment Comparison</title>
+<title>WebView Cookie Lab</title>
 <style>
 body {
-  background:#111827;
-  color:white;
-  font-family:Arial;
-  padding:20px;
+  background:#10141e;
+  color:#edf2fa;
+  font-family:Arial,sans-serif;
+  padding:22px;
 }
+h2 {color:#72a5ff}
 .card {
-  background:#1f2937;
-  padding:16px;
-  border-radius:10px;
-  margin:12px 0;
+  background:#1c2535;
+  padding:17px;
+  border-radius:12px;
+  margin:15px 0;
+}
+button {
+  width:100%;
+  padding:14px;
+  margin:7px 0;
+  border:0;
+  border-radius:8px;
+  background:#3978ed;
+  color:white;
+  font-weight:bold;
 }
 pre {
   white-space:pre-wrap;
   overflow-wrap:anywhere;
 }
+.status {color:#62dda0}
 </style>
 </head>
 <body>
 
-<h2>Browser Cookie Comparison</h2>
+<h2>Android WebView Cookie Lab</h2>
 
 <div class="card">
-  <h3>Environment</h3>
-  <pre id="environment"></pre>
+  <b>Browser Information</b>
+  <pre id="browser"></pre>
 </div>
 
 <div class="card">
-  <h3>Cookie Names</h3>
-  <pre id="cookies"></pre>
+  <button onclick="createCookie()">
+    CREATE TEST COOKIE
+  </button>
+
+  <button onclick="checkCookie()">
+    CHECK TEST COOKIE
+  </button>
+
+  <button onclick="clearCookie()">
+    DELETE TEST COOKIE
+  </button>
 </div>
 
 <div class="card">
-  <h3>Storage</h3>
-  <pre id="storage"></pre>
+  <b>Test Results</b>
+  <pre id="results">Waiting...</pre>
 </div>
 
 <script>
-const data = {
-  origin: location.origin,
+const output = document.getElementById("results");
+
+document.getElementById("browser").textContent =
+JSON.stringify({
   userAgent: navigator.userAgent,
+  origin: location.origin,
   protocol: location.protocol,
-  secureContext: isSecureContext,
-  cookieApi: typeof document.cookie === "string",
-  cookieNames: document.cookie
+  secure: isSecureContext,
+  isAndroidWebView: /Android.*; wv\)/i.test(navigator.userAgent),
+  isInstagram: /Instagram/i.test(navigator.userAgent)
+}, null, 2);
+
+function log(message) {
+  output.textContent =
+    new Date().toLocaleTimeString() +
+    " - " + message + "\n" +
+    output.textContent;
+}
+
+function createCookie() {
+  document.cookie =
+    "lab_sessionid=FAKE_SESSION_123456789; Path=/; Secure; SameSite=Lax";
+
+  log("CREATE: " +
+    (document.cookie.includes("lab_sessionid=")
+      ? "SUCCESS"
+      : "COOKIE NOT READABLE"));
+}
+
+function checkCookie() {
+  const found = document.cookie
     .split(";")
-    .map(x => x.trim())
-    .filter(Boolean)
-    .map(x => x.split("=")[0]),
-  localStorage: false,
-  sessionStorage: false
-};
+    .some(x => x.trim().startsWith("lab_sessionid="));
 
-try {
-  localStorage.setItem("comparison_test", "ok");
-  data.localStorage = true;
-  localStorage.removeItem("comparison_test");
-} catch(e) {}
+  log(found
+    ? "CHECK: TEST COOKIE FOUND"
+    : "CHECK: TEST COOKIE NOT FOUND");
+}
 
-try {
-  sessionStorage.setItem("comparison_test", "ok");
-  data.sessionStorage = true;
-  sessionStorage.removeItem("comparison_test");
-} catch(e) {}
+function clearCookie() {
+  document.cookie =
+    "lab_sessionid=; Max-Age=0; Path=/; Secure; SameSite=Lax";
 
-document.getElementById("environment").textContent =
-  JSON.stringify({
-    origin: data.origin,
-    userAgent: data.userAgent,
-    protocol: data.protocol,
-    secureContext: data.secureContext
-  }, null, 2);
+  log("DELETE: TEST COOKIE CLEARED");
+}
 
-document.getElementById("cookies").textContent =
-  JSON.stringify(data.cookieNames, null, 2);
-
-document.getElementById("storage").textContent =
-  JSON.stringify({
-    localStorage: data.localStorage,
-    sessionStorage: data.sessionStorage
-  }, null, 2);
 </script>
-
 </body>
 </html>
