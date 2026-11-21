@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android WebView Security Test</title>
+  <style>
+    body {
+      background: #10131a;
+      color: #e8edf5;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      line-height: 1.6;
+    }
+
+    h2 { color: #70a5ff; }
+
+    .panel {
+      background: #1b2230;
+      padding: 18px;
+      border-radius: 12px;
+      margin-top: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .note {
+      color: #aab6c8;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Android WebView Security Test</h2>
+  <p>Tarayıcı ve web güvenlik özellikleri inceleniyor.</p>
+
+  <div class="panel">
+    <strong>Test sonuçları</strong>
+    <pre id="results">Test başlatılıyor...</pre>
+  </div>
+
+  <div class="panel">
+    <strong>Cookie erişim kontrolü</strong>
+    <pre id="cookies">Kontrol ediliyor...</pre>
+  </div>
+
+  <p class="note">
+    Bu test yalnızca mevcut sayfanın kendi origin
+    kapsamındaki bilgileri inceler. HttpOnly çerezleri
+    veya başka domainlerin oturum bilgilerini okumaz.
+    Sonuçlar herhangi bir sunucuya gönderilmez.
+  </p>
+
+  <script>
+    (() => {
+      const results = {
+        origin: location.origin,
+        protocol: location.protocol,
+        userAgent: navigator.userAgent,
+        secureContext: window.isSecureContext,
+        javaScriptEnabled: true,
+        cookieApiAvailable: (
+          typeof document.cookie === "string"
+        ),
+        localStorageAvailable: false,
+        sessionStorageAvailable: false
+      };
+
+      try {
+        localStorage.setItem(
+          "security_test",
+          "ok"
+        );
+        results.localStorageAvailable = true;
+        localStorage.removeItem("security_test");
+      } catch (e) {}
+
+      try {
+        sessionStorage.setItem(
+          "security_test",
+          "ok"
+        );
+        results.sessionStorageAvailable = true;
+        sessionStorage.removeItem("security_test");
+      } catch (e) {}
+
+      document.getElementById("results").textContent =
+        JSON.stringify(results, null, 2);
+
+      const visibleCookies = document.cookie
+        .split(";")
+        .map(item => item.trim())
+        .filter(Boolean)
+        .map(item => item.split("=")[0]);
+
+      document.getElementById("cookies").textContent =
+        visibleCookies.length
+          ? "Okunabilen çerez adları:\n" +
+            visibleCookies.join("\n")
+          : "Bu origin için JavaScript tarafından okunabilen çerez bulunamadı.";
+
+    })();
+  </script>
+
+</body>
+</html>
